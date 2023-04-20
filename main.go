@@ -8,7 +8,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 )
@@ -33,34 +32,32 @@ func main() {
 	log.Fatal(http.ListenAndServe(":3000", r))
 }
 
+func handleErr(err error ) {
+	if err != nil {
+		panic(err)
+	}
+}
+
 func homeHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Welcome to the API!")
 }
 
 func getNotesDB() []Note {
 	notesJson, err := os.OpenFile("notes.json", os.O_RDWR|os.O_CREATE, 0644)
-	if err != nil {
-		panic(err)
-	}
+	handleErr(err)
 
 	defer notesJson.Close()
 
 	data, err := notesJson.Stat()
 
-	if err != nil {
-		panic(err)
-	}
+	handleErr(err)
 
 	var notes []Note
 	if data.Size() != 0 {
 		bytes, err := io.ReadAll(notesJson)
-		if err != nil {
-			panic(err)
-		}
+		handleErr(err)
 		err = json.Unmarshal(bytes, &notes)
-		if err != nil {
-			panic(err)
-		}
+		handleErr(err)
 	}
 
 	return notes
@@ -70,28 +67,19 @@ func getNotes(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	notesJson, err := os.OpenFile("notes.json", os.O_RDWR|os.O_CREATE, 0644)
-	if err != nil {
-		panic(err)
-	}
+	handleErr(err)
 
 	defer notesJson.Close()
 
 	data, err := notesJson.Stat()
-
-	if err != nil {
-		panic(err)
-	}
+	handleErr(err)
 
 	var notes []Note
 	if data.Size() != 0 {
 		bytes, err := io.ReadAll(notesJson)
-		if err != nil {
-			panic(err)
-		}
+		handleErr(err)
 		err = json.Unmarshal(bytes, &notes)
-		if err != nil {
-			panic(err)
-		}
+		handleErr(err)
 	}
 
 	json.NewEncoder(w).Encode(notes)
@@ -109,13 +97,10 @@ func addNote(w http.ResponseWriter, r *http.Request) {
 
 	notes = append(notes, note)
 	file, err := json.MarshalIndent(notes, "", " ")
-	if err != nil {
-		panic(err)
-	}
+	handleErr(err)
+
 	err = ioutil.WriteFile("notes.json", file, 0644)
-	if err != nil {
-		panic(err)
-	}
+	handleErr(err)
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte("Note added"))
 	json.NewEncoder(w).Encode(note)
@@ -163,13 +148,10 @@ func deleteNote(w http.ResponseWriter, r *http.Request) {
 	newNotes := removeNoteById(notes, noteId)
 
 	file, err := json.MarshalIndent(newNotes, "", " ")
-	if err != nil {
-		panic(err)
-	}
+	handleErr(err)
+
 	err = ioutil.WriteFile("notes.json", file, 0644)
-	if err != nil {
-		panic(err)
-	}
+	handleErr(err)
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(newNotes)
@@ -219,10 +201,9 @@ func UpdateNote(w http.ResponseWriter, r *http.Request) {
 	notes = append(notes, note)
 
 	file, err := json.MarshalIndent(notes, "", " ")
-	if err != nil {
-		panic(err)
-	}
+	handleErr(err)
 	err = ioutil.WriteFile("notes.json", file, 0644)
+	handleErr(err)
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(notes)
